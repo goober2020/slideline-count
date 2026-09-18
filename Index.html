@@ -1,1 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Football Sideline Snap Tracker</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --red: #ef4444;
+      --green: #22c55e;
+      --light-green: #15803d;
+    }
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 12px;
+      padding-bottom: 90px;
+    }
+
+    .container {
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      text-align: center;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    select {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      outline: none;
+    }
+
+    .rules-banner {
+      background: rgba(37, 99, 235, 0.15);
+      border: 1px solid rgba(37, 99, 235, 0.4);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    .btn-secondary {
+      background: #334155;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .roster-header {
+      display: grid;
+      grid-template-columns: 44px 1fr repeat(4, 38px) 55px;
+      padding: 8px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: var(--text-muted);
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .roster-header .col-name {
+      text-align: left;
+    }
+
+    .player-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .player-card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: 44px 1fr repeat(4, 38px) 55px;
+      align-items: center;
+      border: 1px solid var(--border);
+    }
+
+    .field-toggle {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .field-toggle input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .player-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding-right: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.2s ease;
+    }
+
+    .player-name.status-red {
+      color: var(--red);
+    }
+
+    .player-name.status-green {
+      color: var(--green);
+    }
+
+    .q-cell {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .q-cell.active-q {
+      font-weight: bold;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      padding: 4px 0;
+    }
+
+    .total-cell {
+      text-align: center;
+      font-weight: bold;
+      font-size: 1rem;
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    .total-cell.status-red {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--red);
+    }
+
+    .total-cell.status-green {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--green);
+    }
+
+    .sticky-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card-bg);
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+    }
+
+    .btn-record {
+      width: 100%;
+      max-width: 630px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-record:active {
+      background: var(--accent-hover);
+      transform: scale(0.99);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>🏈 Sideline Snap Counter</h1>
+    <div class="controls-grid">
+      <div class="control-group">
+        <label for="leagueSelect">League Rule</label>
+        <select id="leagueSelect" onchange="updateUI()">
+          <option value="AA">A-A League (6 H1 / 4 H2)</option>
+          <option value="AB">A-B League (6 H1 / 6 H2)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="quarterSelect">Current Quarter</label>
+        <select id="quarterSelect" onchange="updateUI()">
+          <option value="Q1">Q1 (1st Half)</option>
+          <option value="Q2">Q2 (1st Half)</option>
+          <option value="Q3">Q3 (2nd Half)</option>
+          <option value="Q4">Q4 (2nd Half)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="rules-banner" id="ruleBanner">
+      Goal: 6 plays required in 1st Half
+    </div>
+  </header>
+
+  <div class="action-bar">
+    <button class="btn-secondary" onclick="toggleSelectAll()">Check / Uncheck All</button>
+    <button class="btn-secondary" onclick="resetAll()">Reset Game</button>
+  </div>
+
+  <div class="roster-header">
+    <div>ON</div>
+    <div class="col-name">PLAYER</div>
+    <div>Q1</div>
+    <div>Q2</div>
+    <div>Q3</div>
+    <div>Q4</div>
+    <div>HALF</div>
+  </div>
+
+  <div class="player-list" id="playerList"></div>
+</div>
+
+<div class="sticky-footer">
+  <button class="btn-record" onclick="recordSnap()">RECORD SNAP FOR SELECTED</button>
+</div>
+
+<script>
+  const rosterData = [
+    { num: 1, name: "Ryker Conover" },
+    { num: 2, name: "Cooper Villalobos" },
+    { num: 3, name: "Caeser Johnson" },
+    { num: 4, name: "Bryce Anderson" },
+    { num: 5, name: "James Keller" },
+    { num: 6, name: "Rowyan Colleran" },
+    { num: 7, name: "Jordan Cook" },
+    { num: 9, name: "McCoy Kvasnicka" },
+    { num: 10, name: "Jackson Mitton" },
+    { num: 12, name: "Thomas Hale" },
+    { num: 13, name: "Graham Sanders" },
+    { num: 14, name: "Mason Kons" },
+    { num: 17, name: "Gulian Guerrero" },
+    { num: 20, name: "Jhett Barthlome" },
+    { num: 21, name: "Greyson Puckett" },
+    { num: 22, name: "Carson Trammell" },
+    { num: 23, name: "Morgan Chatterton" },
+    { num: 28, name: "Abe Guerrero" }
+  ];
+
+  let players = rosterData.map(p => ({
+    ...p,
+    onField: false,
+    q1: 0,
+    q2: 0,
+    q3: 0,
+    q4: 0
+  }));
+
+  function init() {
+    render();
+  }
+
+  function render() {
+    const list = document.getElementById("playerList");
+    const currentQ = document.getElementById("quarterSelect").value;
+    const league = document.getElementById("leagueSelect").value;
+    const isFirstHalf = (currentQ === "Q1" || currentQ === "Q2");
+    
+    let target = 6;
+    if (!isFirstHalf) {
+      target = (league === "AA") ? 4 : 6;
+    }
+
+    document.getElementById("ruleBanner").innerText = 
+      `Current Requirement: ${target} plays in ${isFirstHalf ? "1st" : "2nd"} Half`;
+
+    list.innerHTML = "";
+
+    players.forEach((p, index) => {
+      const halfTotal = isFirstHalf ? (p.q1 + p.q2) : (p.q3 + p.q4);
+      const isMet = halfTotal >= target;
+      const statusClass = isMet ? "status-green" : "status-red";
+
+      const card = document.createElement("div");
+      card.className = "player-card";
+      card.innerHTML = `
+        <div class="field-toggle">
+          <input type="checkbox" ${p.onField ? "checked" : ""} onchange="toggleField(${index})">
+        </div>
+        <div class="player-name ${statusClass}">
+          #${p.num} ${p.name}
+        </div>
+        <div class="q-cell ${currentQ === 'Q1' ? 'active-q' : ''}">${p.q1}</div>
+        <div class="q-cell ${currentQ === 'Q2' ? 'active-q' : ''}">${p.q2}</div>
+        <div class="q-cell ${currentQ === 'Q3' ? 'active-q' : ''}">${p.q3}</div>
+        <div class="q-cell ${currentQ === 'Q4' ? 'active-q' : ''}">${p.q4}</div>
+        <div class="total-cell ${statusClass}">${halfTotal}</div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  function toggleField(index) {
+    players[index].onField = !players[index].onField;
+  }
+
+  function recordSnap() {
+    const currentQ = document.getElementById("quarterSelect").value.toLowerCase();
+    players.forEach(p => {
+      if (p.onField) {
+        p[currentQ] += 1;
+      }
+    });
+    render();
+  }
+
+  function toggleSelectAll() {
+    const hasUnchecked = players.some(p => !p.onField);
+    players.forEach(p => p.onField = hasUnchecked);
+    render();
+  }
+
+  function updateUI() {
+    render();
+  }
+
+  function resetAll() {
+    if (confirm("Are you sure you want to reset all play counts to zero?")) {
+      players.forEach(p => {
+        p.onField = false;
+        p.q1 = 0;
+        p.q2 = 0;
+        p.q3 = 0;
+        p.q4 = 0;
+      });
+      render();
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
